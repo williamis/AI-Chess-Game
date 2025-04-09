@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shakkipeli AI:ta vastaan</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='chessboard.css') }}">
+<script src="{{ url_for('static', filename='chessboard.js') }}"></script>
+  <style>
+    body {
+      text-align: center;
+      font-family: sans-serif;
+      margin-top: 50px;
+    }
+    #board {
+      width: 400px;
+      margin: 20px auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Shakkipeli AI:ta vastaan</h1>
+  <div id="board"></div>
+
+  <script src="{{ url_for('static', filename='jquery-3.5.1.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='chessboard.js') }}"></script>
+  <script src="{{ url_for('static', filename='chess.min.js') }}"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const game = new Chess();
+
+      const board = Chessboard('board', {
+        draggable: true,
+        position: 'start',
+        pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
+        onDrop: async function (source, target) {
+          const move = {
+            from: source,
+            to: target,
+            promotion: 'q'
+          };
+
+          const result = game.move(move);
+          if (result === null) return 'snapback';
+
+          const response = await fetch('/move', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(move)
+          });
+
+          const data = await response.json();
+          if (data.valid) {
+            game.load(data.fen);
+            board.position(data.fen);
+          } else {
+            alert("Virheellinen siirto!");
+            board.position(game.fen());
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
