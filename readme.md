@@ -16,8 +16,8 @@ A high-performance chess engine and web application that bridges classical game 
 
 - Instant Feedback: Visual indicators for checks, illegal moves, and AI calculation states.
 
-## Technical Core & Architecture
-# Intelligence Engine
+# Technical Core & Architecture
+## Intelligence Engine
 The AI is a custom-built engine utilizing:
 
 - Minimax Algorithm: A recursive search algorithm for decision-making, evaluating thousands of potential board states.
