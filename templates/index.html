@@ -1,65 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Shakkipeli AI:ta vastaan</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='chessboard.css') }}">
-<script src="{{ url_for('static', filename='chessboard.js') }}"></script>
-  <style>
-    body {
-      text-align: center;
-      font-family: sans-serif;
-      margin-top: 50px;
-    }
-    #board {
-      width: 400px;
-      margin: 20px auto;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuantumChess AI | Professional Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='chessboard.css') }}">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        #board { max-width: 500px; width: 100%; margin: 0 auto; }
+        .chessboard-63f37 { width: 100% !important; height: auto !important; }
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: inline-block; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    </style>
 </head>
-<body>
-  <h1>Shakkipeli AI:ta vastaan</h1>
-  <div id="board"></div>
+<body class="bg-slate-50 min-h-screen text-slate-900">
 
-  <script src="{{ url_for('static', filename='jquery-3.5.1.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='chessboard.js') }}"></script>
-  <script src="{{ url_for('static', filename='chess.min.js') }}"></script>
+    <nav class="bg-white border-b border-slate-200 py-4 mb-6 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold tracking-tight text-slate-800">QuantumChess <span class="text-blue-600">AI</span></h1>
+            <div id="ai-thinking" class="hidden text-blue-600 text-sm font-semibold flex items-center gap-2">
+                AI calculating... <div class="loader"></div>
+            </div>
+        </div>
+    </nav>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const game = new Chess();
+    <main class="max-w-5xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-3 gap-6 pb-12">
+        
+        <div class="lg:col-span-2 bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div id="board"></div>
+        </div>
 
-      const board = Chessboard('board', {
-        draggable: true,
-        position: 'start',
-        pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
-        onDrop: async function (source, target) {
-          const move = {
-            from: source,
-            to: target,
-            promotion: 'q'
-          };
+        <div class="space-y-6">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] mb-3">Game Status</h3>
+                <div id="status" class="text-md font-semibold bg-slate-50 p-3 rounded-xl border border-slate-100 transition-colors">
+                    White to move
+                </div>
+            </div>
 
-          const result = game.move(move);
-          if (result === null) return 'snapback';
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col h-64">
+                <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] mb-3">Move History</h3>
+                <div id="move-history" class="overflow-y-auto flex-grow text-xs font-mono space-y-1 pr-2 custom-scrollbar">
+                    <div class="text-slate-400 italic">No moves yet...</div>
+                </div>
+            </div>
 
-          const response = await fetch('/move', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(move)
-          });
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-5">
+                <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] mb-1">Settings</h3>
+                <div>
+                    <label for="difficulty" class="block text-xs font-medium text-slate-500 mb-2">AI Difficulty</label>
+                    <select id="difficulty" name="difficulty" class="w-full bg-white border border-slate-200 p-2 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="1">Level 1: Novice</option>
+                        <option value="2" selected>Level 2: Intermediate</option>
+                        <option value="3">Level 3: Advanced</option>
+                    </select>
+                </div>
+                <button id="new-game" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-black transition-all text-sm active:scale-95">
+                    Reset Match
+                </button>
+            </div>
+        </div>
+    </main>
 
-          const data = await response.json();
-          if (data.valid) {
-            game.load(data.fen);
-            board.position(data.fen);
-          } else {
-            alert("Virheellinen siirto!");
-            board.position(game.fen());
-          }
-        }
-      });
-    });
-  </script>
+    <script src="{{ url_for('static', filename='jquery-3.5.1.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='chessboard.js') }}"></script>
+    <script src="{{ url_for('static', filename='chess.min.js') }}"></script>
+
+    <script>
+        $(function() {
+            let game = new Chess();
+            let moveCount = 1;
+            const $status = $('#status');
+            const $thinking = $('#ai-thinking');
+            const $history = $('#move-history');
+
+            function updateStatus(isGameOver, result) {
+                if (isGameOver) {
+                    $status.text("Over: " + result).addClass("text-red-600 bg-red-50 border-red-100");
+                } else {
+                    const turn = game.turn() === 'w' ? "White" : "Black (AI)";
+                    $status.text(turn + " to move").removeClass("text-red-600 bg-red-50 border-red-100");
+                    if (game.in_check()) $status.append(" (CHECK)");
+                }
+            }
+
+            function addMoveToHistory(userMove, aiMove) {
+                if (moveCount === 1) $history.empty();
+                const row = `
+                    <div class="flex border-b border-slate-50 py-1.5 items-center">
+                        <span class="w-6 text-slate-300 font-bold">${moveCount}.</span>
+                        <span class="flex-1 font-medium text-slate-700">${userMove}</span>
+                        <span class="flex-1 text-blue-600 font-bold">${aiMove || '—'}</span>
+                    </div>`;
+                $history.append(row);
+                $history.scrollTop($history[0].scrollHeight);
+                moveCount++;
+            }
+
+            function onDrop(source, target) {
+                const move = game.move({ from: source, to: target, promotion: 'q' });
+                if (move === null) return 'snapback';
+
+                $thinking.removeClass('hidden');
+
+                fetch('/move', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ from: source, to: target, difficulty: $('#difficulty').val() })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    $thinking.addClass('hidden');
+                    if (data.valid) {
+                        game.load(data.fen);
+                        board.position(data.fen);
+                        addMoveToHistory(data.user_move, data.ai_move);
+                        updateStatus(data.game_over, data.status);
+                    }
+                });
+            }
+
+            const board = Chessboard('board', {
+                draggable: true,
+                position: 'start',
+                onDragStart: (s, p) => !game.game_over() && p.search(/^w/) !== -1,
+                onDrop: onDrop,
+                onSnapEnd: () => board.position(game.fen()),
+                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+            });
+
+            $('#new-game').click(() => {
+                fetch('/reset', {method: 'POST'}).then(res => res.json()).then(data => {
+                    game.load(data.fen);
+                    board.position(data.fen);
+                    $history.html('<div class="text-slate-400 italic">No moves yet...</div>');
+                    moveCount = 1;
+                    updateStatus(false);
+                });
+            });
+        });
+    </script>
 </body>
 </html>
