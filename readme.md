@@ -1,4 +1,4 @@
-## QuantumChess AI
+## AI-Chess-Game
 A high-performance chess engine and web application that bridges classical game theory with modern web architecture. This project demonstrates algorithmic optimization, asynchronous state management, and professional UI/UX design.
 
 ![alt text](image-2.png)
